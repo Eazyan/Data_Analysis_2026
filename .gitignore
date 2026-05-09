@@ -1,0 +1,14 @@
+.DS_Store
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+*.log
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Generated runtime files
+Задание 3/outputs/*
+!Задание 3/outputs/.gitkeep
