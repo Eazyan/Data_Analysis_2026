@@ -44,6 +44,7 @@ def analyze_dataset(
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": build_user_prompt(dataset_path.name, user_instruction)},
     ]
+    trace: list[dict[str, Any]] = []
 
     for step in range(max_steps):
         response = chat_completion(config, messages, tools=True, require_tool=(step == 0))
@@ -68,14 +69,25 @@ def analyze_dataset(
 
         for tool_call in tool_calls:
             function = tool_call.get("function", {})
+            arguments = function.get("arguments") or "{}"
             if function.get("name") != "run_python_code":
                 content = f"Unknown tool requested: {function.get('name')}"
             else:
                 try:
-                    args = json.loads(function.get("arguments") or "{}")
+                    args = json.loads(arguments)
                     content = run_python_code(str(args.get("code", "")), dataset_path, output_dir)
                 except Exception as error:
                     content = f"Tool validation or execution error: {error}"
+
+            trace.append(
+                {
+                    "tool_call_id": tool_call.get("id"),
+                    "tool_name": function.get("name"),
+                    "arguments": arguments,
+                    "result_preview": content[:2000],
+                }
+            )
+            save_trace(output_dir, trace)
 
             messages.append(
                 {
@@ -93,8 +105,17 @@ def analyze_dataset(
         }
     )
     response = chat_completion(config, messages, tools=False)
+    save_trace(output_dir, trace)
     return extract_message(response).get("content", ""), collect_pngs(output_dir)
 
 
 def collect_pngs(output_dir: Path) -> list[str]:
     return [str(path) for path in sorted(output_dir.glob("*.png"))]
+
+
+def save_trace(output_dir: Path, trace: list[dict[str, Any]]) -> None:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    (output_dir / "tool_trace.json").write_text(
+        json.dumps({"tool_calls": trace}, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )

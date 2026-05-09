@@ -48,9 +48,11 @@ def chat_completion(
     }
     if tools:
         body["tools"] = [PYTHON_TOOL]
-        # Some OpenRouter providers reject "required" even when they support tools.
-        # The agent prompt still requires the first action to be a tool call.
-        body["tool_choice"] = "auto"
+        body["tool_choice"] = (
+            {"type": "function", "function": {"name": "run_python_code"}}
+            if require_tool
+            else "auto"
+        )
 
     request = urllib.request.Request(
         f"{config.base_url}/chat/completions",

@@ -69,6 +69,11 @@ import matplotlib.pyplot as plt
 
 DATASET_PATH = {str(dataset_path)!r}
 OUTPUT_DIR = {str(output_dir)!r}
+if DATASET_PATH.lower().endswith((".xlsx", ".xls")):
+    data = pd.read_excel(DATASET_PATH)
+else:
+    data = pd.read_csv(DATASET_PATH)
+df = data
 
 {code}
 """

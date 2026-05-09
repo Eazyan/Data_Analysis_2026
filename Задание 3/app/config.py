@@ -29,5 +29,5 @@ def load_config() -> LLMConfig:
         provider="openrouter",
         base_url=os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1").rstrip("/"),
         api_key=os.getenv("OPENROUTER_API_KEY", ""),
-        model=os.getenv("OPENROUTER_MODEL", "qwen/qwen3.6-plus"),
+        model=os.getenv("OPENROUTER_MODEL", "openai/gpt-4o"),
     )
